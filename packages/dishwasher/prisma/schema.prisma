@@ -1,0 +1,23 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Storage {
+  id String @id @db.VarChar(36)
+  createdAt DateTime @default(now())
+  urls Url[]
+}
+
+model Url {
+  id Int @default(autoincrement()) @id
+  url String
+  key String @unique @db.VarChar(16)
+  createdAt DateTime @default(now())
+  storageId String @db.VarChar(36)
+  storage Storage @relation(fields: [storageId], references: [id])
+}
