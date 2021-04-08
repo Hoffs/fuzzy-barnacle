@@ -42,14 +42,14 @@ export default function Header(props: HeaderProps) {
   //   }
   //   setCStorageKey(rStorageKey);
   // }, [rVersion, setCVersion, rStorageKey, setCStorageKey]);
-  useEffect(() => {
-    console.log("updating sData from external");
-    setSData({
-      version: rVersion || "vanilla",
-      storageKey: rStorageKey,
-      updatedExternally: true,
-    });
-  }, [rVersion, rStorageKey, setSData]);
+  // useEffect(() => {
+  //   console.log("updating sData from external");
+  //   setSData({
+  //     version: rVersion || "vanilla",
+  //     storageKey: rStorageKey,
+  //     updatedExternally: true,
+  //   });
+  // }, [rVersion, rStorageKey, setSData]);
 
   // Standard debounced storage key value, to avoid updating "global"
   // storage key repeatedly.
@@ -62,7 +62,7 @@ export default function Header(props: HeaderProps) {
       setSDataAlt((prev) => ({
         ...prev,
         storageKey: storageKey,
-        updatedExternally: false,
+        shouldNavigate: true,
       }));
       // setCStorageKey(debouncedStorageKey, false);
     // }
@@ -98,28 +98,27 @@ export default function Header(props: HeaderProps) {
       setStorageKey({ value: cStorageKey || "", externalUpdate: true });
   }, [cStorageKey, setStorageKey]);
 
-  // Navigation logic when "global" storage data changes.
-  const navigate = useNavigate();
-  const firstRender = useRef(true);
-  useEffect(() => {
-    const sData = sContext.data;
-    if (!firstRender.current) {
-      // console.log("navigating?", rVersion, cVersion, rStorageKey, cStorageKey)
-      // if (rVersion !== cVersion || rStorageKey !== cStorageKey) {
-
-      console.log("navigating?", sData);
-      if (!sData.updatedExternally) {
-        if (rVersion !== sData.version || rStorageKey !== sData.storageKey) {
-          const uri = `/${sData.version}/${sData.storageKey}`;
-          console.log("Navigating to", uri);
-          navigate(uri);
-        }
-      }
-      // }
-    } else {
-      firstRender.current = false;
-    }
-  }, [navigate, rVersion, rStorageKey, sContext.data]);
+  // // Navigation logic when "global" storage data changes.
+  // const navigate = useNavigate();
+  // const firstRender = useRef(true);
+  // useEffect(() => {
+  //   const sData = sContext.data;
+  //   if (!firstRender.current) {
+  //     // console.log("navigating?", rVersion, cVersion, rStorageKey, cStorageKey)
+  //     // if (rVersion !== cVersion || rStorageKey !== cStorageKey) {
+  //     console.log("navigating?", sData);
+  //     if (!sData.shouldNavigate) {
+  //       if (rVersion !== sData.version || rStorageKey !== sData.storageKey) {
+  //         const uri = `/${sData.version}/${sData.storageKey}`;
+  //         console.log("Navigating to", uri);
+  //         navigate(uri);
+  //       }
+  //     }
+  //     // }
+  //   } else {
+  //     firstRender.current = false;
+  //   }
+  // }, [navigate, rVersion, rStorageKey, sContext.data]);
 
   const { colorMode, toggleColorMode } = useColorMode();
   return (

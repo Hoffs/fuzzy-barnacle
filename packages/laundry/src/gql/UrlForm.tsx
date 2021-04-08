@@ -51,7 +51,7 @@ export function UrlForm(): ReactElement {
         setStorageData({
           version: "gql",
           storageKey: data.shortenUrl.storageId,
-          updatedExternally: false,
+          shouldNavigate: true,
         });
       } else {
         console.error("Received empty data but no errors");
