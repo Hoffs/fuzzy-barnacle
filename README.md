@@ -28,4 +28,6 @@ ENV_FILE_PATH=env.example docker-compose -f stack.yml up --build --force-recreat
                +---------+   +----------+
 ```
 
-##
+## Screenshot
+
+![App](/sc.jpg "Screenshot")
