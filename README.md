@@ -9,8 +9,8 @@ Things to try: MobX, Redux, Vanilla, Relay, TypeORM, Prisma, ?
 "Prod" style deployment that compiles backend to JS and packages CRA app, setups all dependencies:
 
 ```sh
-docker-compose down
-ENV_FILE_PATH=env.example docker-compose up --build --force-recreate -d
+docker-compose -f stack.yml down
+ENV_FILE_PATH=env.example docker-compose -f stack.yml up --build --force-recreate -d
 ```
 
 ```
