@@ -1,0 +1,12 @@
+FROM node:15-alpine
+ENV NODE_ENV=production
+
+WORKDIR /app
+
+ADD prisma/ prisma/
+ADD package*.json .
+
+# Install dependencies and generate prisma client
+RUN npm install
+
+CMD [ "npm", "run", "prisma-migrate" ]

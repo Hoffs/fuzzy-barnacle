@@ -1,0 +1,52 @@
+version: '3.1'
+
+services:
+  ingress:
+    image: nginx:1.19-alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - 80:80
+
+  backend:
+    build: ./packages/washingmachine
+    image: washingmachine:1.0
+    env_file: ${ENV_FILE_PATH}
+    environment:
+      # DATABASE_URL: ${PGSQL_URI}
+      PORT: 7333
+
+  db:
+    image: postgres
+    restart: always
+    env_file: ${ENV_FILE_PATH}
+    # environment:
+    #   POSTGRES_PASSWORD: ${PGSQL_PASS}
+
+  # Sort of hacky way to apply migrations, but it works.
+  migrate:
+    build:
+      context: ./packages/washingmachine
+      dockerfile: Dockerfile.migrate
+    image: machine_migrate:1.0
+    env_file: ${ENV_FILE_PATH}
+    restart: on-failure
+    depends_on:
+      - db # This technically doesn't do much, but restart on-failure should work
+
+  # If required
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 4455:8080
+
+  webapp:
+    build:
+      context: ./packages/laundry
+      args:
+        REACT_APP_API_URL: http://localhost # Build arg used by CRA
+    image: laundry:1.0
+    env_file: ${ENV_FILE_PATH}
+    # environment:
+    #   REACT_APP_API_URL: ${API_URL}
