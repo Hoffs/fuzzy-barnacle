@@ -15,6 +15,8 @@ import { Url } from "./Url";
 import { generateKey } from "./utils/KeyGenerator";
 import crypto from "crypto";
 import { IsUrl, MaxLength, MinLength } from "class-validator";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime";
+import { PrismaClient } from ".prisma/client";
 
 // Could be 2 types, one with specific storageId, other with random.
 @InputType()
@@ -63,24 +65,56 @@ export class UrlResolver {
     @Arg("data") data: ShortenUrlInput,
     @Ctx() ctx: Context
   ): Promise<ShortenUrlPayload> {
+    async function createUrlRecord(
+      prisma: PrismaClient,
+      url: string,
+      urlKey: string,
+      storageId: string
+    ): Promise<ShortenUrlPayload> {
+      const created = await prisma.url.create({
+        data: {
+          url: url,
+          key: urlKey,
+          storage: {
+            connectOrCreate: {
+              create: { id: storageId },
+              where: { id: storageId },
+            },
+          },
+        },
+      });
+      return { url: created, storageId: created.storageId };
+    }
+
     if (data.storageId === undefined) {
       data.storageId = crypto.randomUUID();
     }
 
-    const created = await ctx.prisma.url.create({
-      data: {
-        url: data.url,
-        key: generateKey(8),
-        storage: {
-          connectOrCreate: {
-            create: { id: data.storageId },
-            where: { id: data.storageId },
-          },
-        },
-      },
-    });
-
-    return { url: created, storageId: created.storageId };
+    // This generates random url "key" optimistically.
+    try {
+      return await createUrlRecord(
+        ctx.prisma,
+        data.url,
+        generateKey(8),
+        data.storageId
+      );
+    } catch (error) {
+      ctx.logger.error(error, "Failed to create URL, retrying...");
+      if (
+        error instanceof PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        // Retry once more if unique constraint violated.
+        return await createUrlRecord(
+          ctx.prisma,
+          data.url,
+          generateKey(8),
+          data.storageId
+        );
+      } else {
+        throw error;
+      }
+    }
   }
 
   @Mutation((returns) => DeleteUrlPayload)
