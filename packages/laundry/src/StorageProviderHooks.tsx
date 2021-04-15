@@ -1,31 +1,9 @@
-import { useMatch } from "@reach/router";
 import React, {
   PropsWithChildren,
-  SetStateAction,
   useContext,
   useEffect,
   useState,
 } from "react";
-
-export function useRouteVersionAndStorageKey() {
-  const match = useMatch("/:version/:storageKey");
-  const matchAlt = useMatch("/:version");
-
-  const matchVersion = match?.version;
-  const matchBakVersion = matchAlt?.version;
-  const matchStorageKey = match?.storageKey || "";
-
-  const [version, setVersion] = useState(matchVersion || matchBakVersion);
-  useEffect(() => {
-    if (matchVersion) {
-      setVersion(matchVersion);
-    } else if (matchBakVersion) {
-      setVersion(matchBakVersion);
-    }
-  }, [matchVersion, matchBakVersion]);
-
-  return [version, matchStorageKey];
-}
 
 interface StorageData {
   version: string;
@@ -35,12 +13,12 @@ interface StorageData {
 
 interface StorageContextValue {
   data: StorageData;
-  setData(action: SetStateAction<StorageData>): void;
+  setData: React.Dispatch<React.SetStateAction<StorageData>>;
 }
 
 export const StorageContext = React.createContext<StorageContextValue>({
   data: { version: "vanilla", shouldNavigate: false },
-  setData: () => {},
+  setData: (prev) => ({...prev}),
 });
 
 const { Provider } = StorageContext;
@@ -72,7 +50,7 @@ export const StorageProvider = ({ children }: PropsWithChildren<{}>) => {
       storageKey: storageKey,
       shouldNavigate: false,
     });
-  }, [path, setData]);
+  }, [path]);
 
   useEffect(() => {
     console.debug("Maybe navigating", data);
@@ -94,12 +72,13 @@ export const StorageProvider = ({ children }: PropsWithChildren<{}>) => {
   return <Provider value={value}>{children}</Provider>;
 };
 
-export function useStorageKey(): [string | undefined] {
+export function useStorageKey(): string | undefined {
+  // useContext always causes full re-render, when context changes.
   const context = useContext(StorageContext);
-  return [context.data.storageKey];
+  return context.data.storageKey;
 }
 
-export function useStorageData(): [StorageData, (data: StorageData) => void] {
+export function useStorageData(): [StorageData, React.Dispatch<React.SetStateAction<StorageData>>] {
   const context = useContext(StorageContext);
   return [context.data, context.setData];
 }

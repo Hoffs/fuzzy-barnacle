@@ -1,3 +1,4 @@
+import { ApolloError } from "@apollo/client";
 import {
   Button,
   Flex,
@@ -14,7 +15,7 @@ import {
   FormikProps,
 } from "formik";
 import React, { ReactElement } from "react";
-import { useStorageData } from "../RouteHooks";
+import { useStorageData } from "../StorageProviderHooks";
 import { useShortenUrl } from "./UrlHooks";
 
 const validateUrl = (url: string): string | undefined => {
@@ -38,15 +39,13 @@ export function UrlForm(): ReactElement {
     values: FormValues,
     actions: FormikHelpers<FormValues>
   ) => {
-    const { data, errors } = await shortenUrl(
-      values.url,
-      // If storageKey is empty string, use undefined.
-      storageData.storageKey ? storageData.storageKey : undefined,
-    );
+    try {
+      const { data } = await shortenUrl(
+        values.url,
+        // If storageKey is empty string, use undefined.
+        storageData.storageKey ? storageData.storageKey : undefined
+      );
 
-    if (errors) {
-      actions.setFieldError("url", errors.map((x) => x.message).join("\r\n"));
-    } else {
       if (data) {
         setStorageData({
           version: "gql",
@@ -58,6 +57,13 @@ export function UrlForm(): ReactElement {
       }
 
       actions.resetForm();
+    } catch (err) {
+      console.error(err);
+      if (err instanceof ApolloError) {
+        actions.setFieldError("url", err.message);
+      } else {
+        actions.setFieldError("url", "Unknown error has occurred");
+      }
     }
 
     actions.setSubmitting(false);

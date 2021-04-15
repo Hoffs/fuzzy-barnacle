@@ -9,7 +9,7 @@ export interface UrlShortenerProps extends RouteComponentProps {
 }
 
 const mapToShortened = (id: string, url: string): ShortenedUrl => {
-  return { id: id, fullUrl: url, shortUrl: `https://localhost:3000/a/${url}` };
+  return { id: id, fullUrl: url, shortUrl: `${window.location.protocol}//${window.location.host}/a/${url}` };
 };
 
 export function UrlShortener(props: UrlShortenerProps): ReactElement {

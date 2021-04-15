@@ -7,118 +7,45 @@ import {
   Input,
   useColorMode,
 } from "@chakra-ui/react";
-import { RouteComponentProps, useMatch, useNavigate } from "@reach/router";
-import React, { useContext, useEffect, useRef, useState } from "react";
-import { useDebounce, useDebouncedCallback } from "use-debounce/lib";
-import {
-  useStorageKey,
-  // useVersion,
-  useRouteVersionAndStorageKey,
-  useStorageData,
-  StorageContext,
-} from "./RouteHooks";
+import { RouteComponentProps } from "@reach/router";
+import React, { useEffect, useState } from "react";
+import { useDebouncedCallback } from "use-debounce/lib";
+import { useStorageData } from "./StorageProviderHooks";
 
 export interface HeaderProps extends RouteComponentProps {}
 
-export default function Header(props: HeaderProps) {
-  // const [cVersion, setCVersion] = useVersion();
-  // const [cStorageKey, setCStorageKey] = useStorageKey();
-  const [rVersion, rStorageKey] = useRouteVersionAndStorageKey();
-  // const [storageKey, setStorageKey] = useState<string>(rStorageKey || "");
+export default function Header(_: HeaderProps) {
+  const [storageData, setStorageData] = useStorageData();
   const [storageKey, setStorageKey] = useState<{
     value: string;
     externalUpdate: boolean;
-  }>({ value: rStorageKey || "", externalUpdate: true });
-  const [sData, setSData] = useStorageData();
-  const [cStorageKey] = useStorageKey();
-  const sContext = useContext(StorageContext);
+  }>({ value: storageData.storageKey || "", externalUpdate: true });
 
-  // Update initial values based on route stuff.
-  // This is not the best place to do this.
-  // Ideally the StorageContext could initialize values using LocationContext by itself.
-  // useEffect(() => {
-  //   if (rVersion) {
-  //     setCVersion(rVersion);
-  //   }
-  //   setCStorageKey(rStorageKey);
-  // }, [rVersion, setCVersion, rStorageKey, setCStorageKey]);
-  // useEffect(() => {
-  //   console.log("updating sData from external");
-  //   setSData({
-  //     version: rVersion || "vanilla",
-  //     storageKey: rStorageKey,
-  //     updatedExternally: true,
-  //   });
-  // }, [rVersion, rStorageKey, setSData]);
-
-  // Standard debounced storage key value, to avoid updating "global"
-  // storage key repeatedly.
-  // const [debouncedStorageKey] = useDebounce(storageKey, 1000);
-
-  const setSDataAlt = sContext.setData;
   const debouncedGlobalUpdate = useDebouncedCallback((storageKey) => {
-    console.log("Updating based on debounced", storageKey);
-    // if (storageKey !== undefined) {
-      setSDataAlt((prev) => ({
-        ...prev,
-        storageKey: storageKey,
-        shouldNavigate: true,
-      }));
-      // setCStorageKey(debouncedStorageKey, false);
-    // }
+    setStorageData((prev) => ({
+      ...prev,
+      storageKey: storageKey,
+      shouldNavigate: true,
+    }));
   }, 1000);
 
+  // On state change call callback to set global storageKey, but only
+  // if the value was set internally.
   useEffect(() => {
     if (!storageKey.externalUpdate) {
       debouncedGlobalUpdate(storageKey.value);
     }
   }, [storageKey, debouncedGlobalUpdate]);
-  // useEffect(() => {
-  //   if (debouncedStorageKey) {
-  //     setCStorageKey(debouncedStorageKey);
-  //   }
-  // }, [setCStorageKey, debouncedStorageKey]);
-  // useEffect(() => {
-  //   console.log("Updating based on debounced", debouncedStorageKey);
-  //   if (debouncedStorageKey) {
-  //     setSDataAlt ((prev) => ({
-  //       ...prev,
-  //       storageKey: debouncedStorageKey,
-  //       updatedExternally: false,
-  //     }));
-  //     // setCStorageKey(debouncedStorageKey, false);
-  //   }
-  // }, [debouncedStorageKey, setSDataAlt ]);
 
   // Sync "global" changes to input field.
   useEffect(() => {
-    console.log("Syncing global to input", cStorageKey);
-    // TODO: If update was received externally this should not
-    // trigger backwards loop to debounced update.
-      setStorageKey({ value: cStorageKey || "", externalUpdate: true });
-  }, [cStorageKey, setStorageKey]);
-
-  // // Navigation logic when "global" storage data changes.
-  // const navigate = useNavigate();
-  // const firstRender = useRef(true);
-  // useEffect(() => {
-  //   const sData = sContext.data;
-  //   if (!firstRender.current) {
-  //     // console.log("navigating?", rVersion, cVersion, rStorageKey, cStorageKey)
-  //     // if (rVersion !== cVersion || rStorageKey !== cStorageKey) {
-  //     console.log("navigating?", sData);
-  //     if (!sData.shouldNavigate) {
-  //       if (rVersion !== sData.version || rStorageKey !== sData.storageKey) {
-  //         const uri = `/${sData.version}/${sData.storageKey}`;
-  //         console.log("Navigating to", uri);
-  //         navigate(uri);
-  //       }
-  //     }
-  //     // }
-  //   } else {
-  //     firstRender.current = false;
-  //   }
-  // }, [navigate, rVersion, rStorageKey, sContext.data]);
+    // This will also be called when this component updates global value
+    // with same value that we updated.
+    setStorageKey({
+      value: storageData.storageKey || "",
+      externalUpdate: true,
+    });
+  }, [storageData.storageKey, setStorageKey]);
 
   const { colorMode, toggleColorMode } = useColorMode();
   return (
@@ -133,7 +60,6 @@ export default function Header(props: HeaderProps) {
         <Input
           onChange={(e) => {
             setStorageKey({ value: e.target.value, externalUpdate: false });
-            // debounced(e.target.value);
           }}
           placeholder="Storage Key"
           maxWidth="40ch"
@@ -144,7 +70,7 @@ export default function Header(props: HeaderProps) {
         />
         <HStack spacing="12px">
           <Button variant="outline" minWidth="92px">
-            {rStorageKey}
+            {storageData.storageKey}
           </Button>
           <Button
             variant="outline"

@@ -9,13 +9,15 @@ import {
   Tooltip,
 } from "@chakra-ui/react";
 import React, { ReactElement } from "react";
-import { useStorageKey } from "../RouteHooks";
+import { useStorageKey } from "../StorageProviderHooks";
 import { useStorage } from "./StorageHooks";
 import { Url, useDeleteUrl } from "./UrlHooks";
 
 export function UrlList(): ReactElement {
-  const [storageKey] = useStorageKey();
-  const { loading, error, data } = useStorage(storageKey);
+  // NOTE: This component kinda breaks with react livereload (https://github.com/apollographql/apollo-client/pull/7952)
+  const storageKey = useStorageKey();
+  const storageQ = useStorage(storageKey);
+  const { loading, error, data } = storageQ;
   const [deleteUrl] = useDeleteUrl();
 
   if (error) return <>`Error: ${error.message}`</>;
@@ -26,7 +28,7 @@ export function UrlList(): ReactElement {
         URLs
       </Heading>
       {/* This doesnt really work */}
-      <Skeleton isLoaded={!loading}>
+      <Skeleton isLoaded={!loading || !!data?.storage}>
         <VStack spacing="12px" divider={<StackDivider />}>
           {data?.storage?.urls.map((url) =>
             UrlItem({
@@ -46,8 +48,7 @@ interface UrlItemProps {
 }
 
 function UrlItem(props: UrlItemProps): ReactElement {
-  const { protocol, host } = window.location;
-  const shortUrl = `${protocol}//${host}/a/${props.url.key}`;
+  const shortUrl = `${process.env.REACT_APP_API_URL}/a/${props.url.key}`;
   return (
     <Flex
       key={props.url.id}

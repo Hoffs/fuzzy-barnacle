@@ -1,4 +1,5 @@
 import { FetchResult, gql, MutationResult, useMutation } from "@apollo/client";
+import { GET_STORAGE, StorageData } from "./StorageHooks";
 
 export interface Url {
   id: string;
@@ -33,15 +34,57 @@ const SHORTEN_URL = gql`
   }
 `;
 
-export function useShortenUrl() {
-  const [shortenUrl] = useMutation<ShortenedUrlData, ShortenUrlInput>(
+export function useShortenUrl(): [
+  (
+    url: string,
+    storageId?: string | undefined
+  ) => Promise<
+    FetchResult<ShortenedUrlData, Record<string, any>, Record<string, any>>
+  >,
+  MutationResult<ShortenedUrlData>
+] {
+  const [shortenUrl, data] = useMutation<ShortenedUrlData, ShortenUrlInput>(
     SHORTEN_URL,
     {
-      update(cache, x) {
+      update(cache, mResult) {
+        // Check if storage exists first.
+        if (!mResult.data) {
+          return;
+        }
+
+        const qResult = cache.readQuery<StorageData>({
+          query: GET_STORAGE,
+          variables: { id: mResult.data.shortenUrl.storageId },
+        });
+        if (!qResult?.storage) {
+          // Create storage locally before adding shortened url.
+          cache.writeQuery({
+            query: gql`
+              query WriteStorage($id: ID!) {
+                storage(id: $id) {
+                  id
+                  urls {
+                    id
+                  }
+                }
+              }
+            `,
+            data: {
+              storage: {
+                __typename: "Storage",
+                id: mResult.data.shortenUrl.storageId,
+                urls: [],
+              },
+            },
+            variables: { id: mResult.data.shortenUrl.storageId },
+          });
+        }
+
+        // Modify cache to insert shortened url to storage.
         cache.modify({
           id: cache.identify({
             __typename: "Storage",
-            id: x.data?.shortenUrl.storageId,
+            id: mResult.data.shortenUrl.storageId,
           }),
           fields: {
             urls(cachedUrls) {
@@ -50,7 +93,7 @@ export function useShortenUrl() {
                 {
                   __ref: cache.identify({
                     __typename: "Url",
-                    id: x.data?.shortenUrl.url?.id,
+                    id: mResult.data?.shortenUrl.url?.id,
                   }),
                 },
               ];
@@ -63,7 +106,7 @@ export function useShortenUrl() {
 
   const simpleShortenUrl = (url: string, storageId?: string) =>
     shortenUrl({ variables: { url, storageId } });
-  return [simpleShortenUrl];
+  return [simpleShortenUrl, data];
 }
 
 const DELETE_URL = gql`

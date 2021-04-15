@@ -6,7 +6,7 @@ import Header from "./Header";
 import { UrlShortener as VanillaUrlShortener } from "./vanilla/UrlShortener";
 import { UrlShortener as GqlUrlShortener } from "./gql/UrlShortener";
 import { Redirect, Router } from "@reach/router";
-import { StorageProvider } from "./RouteHooks";
+import { StorageProvider } from "./StorageProviderHooks";
 
 const CenteredGrid = styled(Grid)`
   & > * {

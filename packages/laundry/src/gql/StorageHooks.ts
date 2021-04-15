@@ -1,7 +1,7 @@
 import { gql, useQuery } from "@apollo/client";
 import { Url } from "./UrlHooks";
 
-const GET_STORAGE = gql`
+export const GET_STORAGE = gql`
   query GetStorage($id: ID!) {
     storage(id: $id) {
       id
@@ -14,18 +14,18 @@ const GET_STORAGE = gql`
   }
 `;
 
-interface Storage {
+export interface Storage {
   id: string;
   urls: Url[];
 }
 
-interface StorageData {
+export interface StorageData {
   storage?: Storage;
 }
 
 export function useStorage(id?: string) {
-  // console.log("using storage", id, Date.now())
   return useQuery<StorageData>(GET_STORAGE, {
     variables: { id },
+    fetchPolicy: "cache-and-network",
   });
 }
