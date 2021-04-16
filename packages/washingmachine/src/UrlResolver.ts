@@ -42,19 +42,19 @@ class ShortenUrlPayload {
 
 @InputType()
 class DeleteUrlInput {
-  @Field((type) => ID)
+  @Field((type) => String)
   id: string;
 
-  @Field((type) => ID)
+  @Field((type) => String)
   storageId: string;
 }
 
 @ObjectType()
 class DeleteUrlPayload {
-  @Field((type) => ID, { nullable: true })
-  id?: string;
+  @Field((type) => String, { nullable: true })
+  urlId?: string;
 
-  @Field((type) => ID, { nullable: true })
+  @Field((type) => String, { nullable: true })
   storageId?: string;
 }
 
@@ -86,7 +86,7 @@ export class UrlResolver {
       return { url: created, storageId: created.storageId };
     }
 
-    if (data.storageId === undefined) {
+    if (!data.storageId) {
       data.storageId = crypto.randomUUID();
     }
 
@@ -131,7 +131,7 @@ export class UrlResolver {
     if (count === 0) {
       return {};
     } else {
-      return { id: where.id, storageId: where.storageId };
+      return { urlId: where.id, storageId: where.storageId };
     }
   }
 }

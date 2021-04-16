@@ -110,9 +110,9 @@ export function useShortenUrl(): [
 }
 
 const DELETE_URL = gql`
-  mutation DeleteUrl($id: ID!, $storageId: ID!) {
+  mutation DeleteUrl($id: String!, $storageId: String!) {
     deleteOneUrl(where: { id: $id, storageId: $storageId }) {
-      id
+      urlId
       storageId
     }
   }
@@ -124,7 +124,7 @@ interface DeleteUrlInput {
 }
 
 interface DeleteUrlData {
-  deleteOneUrl: { id: string; storageId: string };
+  deleteOneUrl: { urlId: string; storageId: string };
 }
 
 export function useDeleteUrl(): [
@@ -148,7 +148,8 @@ export function useDeleteUrl(): [
           fields: {
             urls(cachedUrls: Readonly<Url>[], { readField }) {
               return cachedUrls.filter(
-                (ref) => readField("id", ref) !== result.data?.deleteOneUrl.id
+                (ref) =>
+                  readField("id", ref) !== result.data?.deleteOneUrl.urlId
               );
             },
           },

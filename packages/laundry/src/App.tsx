@@ -5,6 +5,7 @@ import styled from "@emotion/styled";
 import Header from "./Header";
 import { UrlShortener as VanillaUrlShortener } from "./vanilla/UrlShortener";
 import { UrlShortener as GqlUrlShortener } from "./gql/UrlShortener";
+import { UrlShortener as RelayUrlShortener } from "./relay/UrlShortener";
 import { Redirect, Router } from "@reach/router";
 import { StorageProvider } from "./StorageProviderHooks";
 
@@ -34,6 +35,7 @@ function App() {
         <Router>
           <VanillaUrlShortener path="/vanilla/*" />
           <GqlUrlShortener path="/gql/*" />
+          <RelayUrlShortener path="/relay/*" />
           <Redirect noThrow from="/*" to="/vanilla/" />
         </Router>
       </StorageProvider>

@@ -1,0 +1,50 @@
+"""Exposes a URL that specifies the behaviour of this scalar."""
+directive @specifiedBy(
+  """The URL that specifies the behaviour of this scalar."""
+  url: String!
+) on SCALAR
+
+input DeleteUrlInput {
+  id: String!
+  storageId: String!
+}
+
+type DeleteUrlPayload {
+  urlId: String
+  storageId: String
+}
+
+type Mutation {
+  shortenUrl(data: ShortenUrlInput!): ShortenUrlPayload!
+  deleteOneUrl(where: DeleteUrlInput!): DeleteUrlPayload!
+}
+
+type Query {
+  storage(id: ID!): Storage
+}
+
+input ShortenUrlInput {
+  url: String!
+  storageId: ID
+}
+
+type ShortenUrlPayload {
+  url: Url
+  storageId: ID
+}
+
+type Storage {
+  id: ID!
+  urls: [Url!]!
+}
+
+type Url {
+  id: ID!
+
+  """Full destination url"""
+  url: String!
+
+  """Shortened url key"""
+  key: String!
+}
+
