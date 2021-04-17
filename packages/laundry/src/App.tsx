@@ -6,6 +6,7 @@ import Header from "./Header";
 import { UrlShortener as VanillaUrlShortener } from "./vanilla/UrlShortener";
 import { UrlShortener as GqlUrlShortener } from "./gql/UrlShortener";
 import { UrlShortener as RelayUrlShortener } from "./relay/UrlShortener";
+import { UrlShortener as MobxUrlShortener } from "./mobx/UrlShortener";
 import { Redirect, Router } from "@reach/router";
 import { StorageProvider } from "./StorageProviderHooks";
 
@@ -36,6 +37,7 @@ function App() {
           <VanillaUrlShortener path="/vanilla/*" />
           <GqlUrlShortener path="/gql/*" />
           <RelayUrlShortener path="/relay/*" />
+          <MobxUrlShortener path="/mobx/*" />
           <Redirect noThrow from="/*" to="/vanilla/" />
         </Router>
       </StorageProvider>
